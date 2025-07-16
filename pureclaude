@@ -1,0 +1,76 @@
+#!/bin/sh
+
+# Record start time at the very beginning
+# start_time=$(node -e "console.log(Date.now())")
+
+# Get npm root path
+NPM_ROOT=$(npm root -g)
+
+# Build claude-code path
+CLAUDE_PATH="$NPM_ROOT/@anthropic-ai/claude-code/"
+
+# Check if path exists
+if [ ! -d "$CLAUDE_PATH" ]; then
+    echo "Error: claude-code path not found: $CLAUDE_PATH"
+    exit 1
+fi
+
+# Check if cli.js exists
+if [ ! -f "$CLAUDE_PATH/cli.js" ]; then
+    echo "Error: cli.js file not found: $CLAUDE_PATH/cli.js"
+    exit 1
+fi
+
+# Check if pure.js exists and is newer than cli.js
+if [ -f "$CLAUDE_PATH/pure.js" ] && [ "$CLAUDE_PATH/pure.js" -nt "$CLAUDE_PATH/cli.js" ]; then
+    # pure.js is up to date, use it directly
+    exec "$CLAUDE_PATH/pure.js" "$@"
+fi
+
+# Generate pure.js using JavaScript with integrated validation
+# Use Node.js for processing with built-in validation
+node -e "
+const fs = require('fs');
+const content = fs.readFileSync('$CLAUDE_PATH/cli.js', 'utf8');
+
+// Check for required text patterns first
+if (!content.includes('You are an interactive CLI tool that helps users with software engineering tasks.')) {
+    console.error('Error: Start text not found in cli.js');
+    process.exit(1);
+}
+const lines = content.split('\n');
+let inReplaceSection = false;
+const result = [];
+
+for (const line of lines) {
+    if (line.includes('You are an interactive CLI tool that helps users with software engineering tasks.')) {
+        result.push('Do the right thing.');
+        inReplaceSection = true;
+        continue;
+    }
+    
+    if (line.includes('Clients are marked as failed in the') && inReplaceSection) {
+        inReplaceSection = false;
+        continue;
+    }
+    
+    if (inReplaceSection) {
+        continue;
+    }
+    
+    let processedLine = line
+        .replace(/NEVER create files unless they're absolutely necessary for achieving your goal\./g, '')
+        .replace(/ALWAYS prefer editing an existing file to creating a new one\./g, '');
+    
+    result.push(processedLine);
+}
+
+fs.writeFileSync('$CLAUDE_PATH/pure.js', result.join('\n'));
+"
+
+# end_time=$(node -e "console.log(Date.now())")
+# echo "处理耗时: $((end_time - start_time)) 毫秒"
+
+# Make pure.js executable
+chmod +x "$CLAUDE_PATH/pure.js"
+"$CLAUDE_PATH/pure.js" "$@"
