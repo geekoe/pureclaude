@@ -2,14 +2,8 @@
 
 [English Documentation](README.md)
 
-PureClaude 是 Claude Code 的优化版本，通过动态修改系统提示来提供更灵活的交互体验。
+PureClaude 是 Claude Code 的优化版本，去掉了原版中冗长无用、偏执的提示词，修改之后更听话、更节省token。
 
-## 功能特点
-
-- 自动缓存处理结果，避免重复生成
-- 使用 Node.js 进行快速文本处理
-- 智能检测文件更新，仅在必要时重新生成
-- 移除了原版中的部分限制性提示
 
 ## 安装使用
 
