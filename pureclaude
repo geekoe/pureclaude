@@ -38,32 +38,13 @@ if (!content.includes('You are an interactive CLI tool that helps users with sof
     process.exit(1);
 }
 const lines = content.split('\n');
+
 let inReplaceSection = false;
-let skipNextLine = false;
 const result = [];
 
+// Second loop: Process replacements
 for (const line of lines) {
-    if (line.includes('You are an interactive CLI tool that helps users with software engineering tasks.')) {
-        result.push('<use_parallel_tool_calls>For maximum efficiency, whenever you perform multiple independent operations, invoke all relevant tools simultaneously rather than sequentially. Prioritize calling tools in parallel whenever possible. For example, when reading 3 files, run 3 tool calls in parallel to read all 3 files into context at the same time. When running multiple read-only commands , always run all of the commands in parallel. Err on the side of maximizing parallel tool calls rather than running too many tools sequentially.</use_parallel_tool_calls>');
-        inReplaceSection = true;
-        continue;
-    }
-    
-    if (line.includes('assistant: Clients are marked as failed in the') && inReplaceSection) {
-        // Skip this line and mark to skip the next line too
-        skipNextLine = true;
-        continue;
-    }
-    
-    if (skipNextLine) {
-        skipNextLine = false;
-        inReplaceSection = false;
-        continue;
-    }
-    
-    if (inReplaceSection) {
-        continue;
-    }
+
     
     let processedLine = line
         .replace(/NEVER create files unless they're absolutely necessary for achieving your goal\./g, '')
